@@ -112,30 +112,22 @@ document.getElementById('btn-registrar').addEventListener('click', () => {
   elDetalhe.textContent = 'Entrada registrada.';
 });
 
-let classeSimulada = 'vazio';
+let modelo, webcam;
 
-function trocarSimulacao(classe, botao) {
-  classeSimulada = classe;
-  document.querySelectorAll('#simulador button')
-    .forEach(b => b.setAttribute('aria-pressed', 'false'));
-  botao.setAttribute('aria-pressed', 'true');
+async function iniciar() {
+  modelo = await tmImage.load('model/model.json', 'model/metadata.json');
+  webcam = new tmImage.Webcam(400, 400, true);
+  await webcam.setup();
+  await webcam.play();
+  document.getElementById('webcam').appendChild(webcam.canvas);
+  loop();
 }
 
-document.getElementById('btn-com').addEventListener('click', e => trocarSimulacao('com_epi', e.target));
-document.getElementById('btn-sem').addEventListener('click', e => trocarSimulacao('sem_epi', e.target));
-document.getElementById('btn-vazio').addEventListener('click', e => trocarSimulacao('vazio', e.target));
-
-function gerarPredicaoFalsa() {
-  const principal = 0.72 + Math.random() * 0.27;
-  const sobra = 1 - principal;
-  const outras = CLASSES.filter(c => c !== classeSimulada);
-  const fatia = Math.random();
-
-  return CLASSES.map(classe => {
-    if (classe === classeSimulada) return { className: classe, probability: principal };
-    const peso = classe === outras[0] ? fatia : (1 - fatia);
-    return { className: classe, probability: sobra * peso };
-  });
+async function loop() {
+  webcam.update();
+  const predicoes = await modelo.predict(webcam.canvas);
+  aoReceberPredicao(predicoes);
+  requestAnimationFrame(loop);
 }
 
-setInterval(() => aoReceberPredicao(gerarPredicaoFalsa()), 100);
+iniciar();
