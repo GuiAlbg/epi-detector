@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de acesso por EPI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --concreto: #E4E2DD;
+    --concreto-2: #F2F1EE;
+    --painel: #1C1F21;
+    --aco: #6B7378;
+    --amarelo: #FFC400;
+    --vermelho: #C8281E;
+    --verde: #1E8E3E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 32px 20px 64px;
+    background: var(--concreto);
+    color: var(--painel);
+    font-family: 'Barlow', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .container { max-width: 880px; margin: 0 auto; }
+
+  header { border-bottom: 3px solid var(--painel); padding-bottom: 12px; margin-bottom: 28px; }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--aco);
+  }
+
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: clamp(32px, 6vw, 52px);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 2px 0 0;
+  }
+
+  .placa {
+    background: var(--painel);
+    color: var(--concreto-2);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .placa::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 10px;
+    background: repeating-linear-gradient(
+      45deg, var(--amarelo) 0 14px, var(--painel) 14px 28px
+    );
+    transform: translateY(0);
+    transition: transform 240ms ease;
+  }
+  .placa.liberado::before { transform: translateY(-10px); }
+
+  .placa-rotulo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--aco);
+    margin-top: 8px;
+  }
+
+  #status {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 40px);
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin: 4px 0 0;
+    color: var(--amarelo);
+  }
+  .placa.liberado #status { color: #5FD68A; }
+  .placa.negado #status { color: #FF6B60; }
+
+  #detalhe { color: var(--aco); font-size: 15px; margin: 6px 0 0; }
+
+  .leitura { margin-top: 28px; }
+
+  .leitura h2, .registro h2, .simulador h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 12px;
+  }
+
+  .classe { margin-bottom: 10px; }
+
+  .classe-topo {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .classe-nome { text-transform: uppercase; letter-spacing: 0.06em; }
+  .classe-valor { font-weight: 600; }
+
+  .barra { height: 8px; background: #CFCCC5; position: relative; }
+  .barra span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--aco);
+    transition: width 120ms linear;
+  }
+  .classe.dominante .barra span { background: var(--painel); }
+
+  .barra::after {
+    content: "";
+    position: absolute;
+    left: 80%;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    background: var(--vermelho);
+  }
+
+  .legenda-limiar {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--aco);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 10px;
+  }
+
+  fieldset {
+    margin-top: 28px;
+    border: 2px solid var(--painel);
+    padding: 20px;
+    background: var(--concreto-2);
+    transition: opacity 200ms ease;
+  }
+  fieldset[disabled] { opacity: 0.45; border-color: var(--aco); }
+
+  legend {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0 8px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--aco);
+    margin-bottom: 4px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    max-width: 320px;
+    padding: 9px 10px;
+    border: 2px solid var(--painel);
+    background: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+  fieldset[disabled] input { border-color: var(--aco); }
+
+  button {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 10px 20px;
+    border: 2px solid var(--painel);
+    background: var(--painel);
+    color: var(--concreto-2);
+    cursor: pointer;
+  }
+  button:hover { background: #000; }
+  fieldset[disabled] button { cursor: not-allowed; }
+
+  :focus-visible { outline: 3px solid var(--vermelho); outline-offset: 2px; }
+
+  .registro { margin-top: 28px; }
+
+  #lista-registros {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    border-top: 1px solid #CFCCC5;
+  }
+  #lista-registros li {
+    padding: 7px 0;
+    border-bottom: 1px solid #CFCCC5;
+    display: flex;
+    gap: 14px;
+  }
+  #lista-registros .vazio { color: var(--aco); border-bottom: none; }
+  .hora { color: var(--aco); }
+
+  .simulador {
+    margin-top: 40px;
+    border: 2px dashed var(--vermelho);
+    padding: 18px;
+  }
+  .simulador h2 { color: var(--vermelho); }
+  .simulador p { font-size: 14px; color: var(--aco); margin: 0 0 14px; }
+  .simulador button { background: #fff; color: var(--painel); margin: 0 6px 6px 0; }
+  .simulador button:hover { background: var(--amarelo); }
+  .simulador button[aria-pressed="true"] { background: var(--amarelo); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <p class="eyebrow">Setor de usinagem &mdash; posto 04</p>
+    <h1>Controle de acesso por EPI</h1>
+  </header>
+
+  <div class="placa" id="placa">
+    <p class="placa-rotulo">Situação do posto</p>
+    <p id="status">Aguardando leitura</p>
+    <p id="detalhe">O registro de entrada abre quando o EPI for identificado.</p>
+  </div>
+
+  <section class="leitura">
+    <h2>Leitura do modelo</h2>
+    <div id="classes"></div>
+    <p class="legenda-limiar">Linha vermelha = limiar de 80% para disparar a ação</p>
+  </section>
+
+  <fieldset id="formulario" disabled>
+    <legend>Registro de entrada</legend>
+    <label for="nome">Nome do operador</label>
+    <input type="text" id="nome" autocomplete="off">
+    <label for="matricula">Matrícula</label>
+    <input type="text" id="matricula" autocomplete="off">
+    <button id="btn-registrar">Registrar entrada</button>
+  </fieldset>
+
+  <section class="registro">
+    <h2>Entradas registradas</h2>
+    <ul id="lista-registros">
+      <li class="vazio">Nenhuma entrada registrada.</li>
+    </ul>
+  </section>
+
+  <section class="simulador" id="simulador">
+    <h2>Simulador (remover na entrega)</h2>
+    <p>Substitui a webcam: cada botão passa a fingir uma leitura do modelo, com oscilação, como aconteceria de verdade.</p>
+    <button id="btn-com" aria-pressed="false">Com EPI</button>
+    <button id="btn-sem" aria-pressed="false">Sem EPI</button>
+    <button id="btn-vazio" aria-pressed="true">Posto vazio</button>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
